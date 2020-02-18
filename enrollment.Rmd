@@ -7,24 +7,44 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(tidyverse)
+library(janitor)
+library(gt)
 ```
 
-## R Markdown
+```{r gov_top_5, echo=F}
+enrollment_stats <- read_excel("enrollment_data.xlsx", skip = 3)
+top_departments <- enrollment_stats %>%
+  clean_names("snake") %>%
+  group_by(course_department) %>%
+  summarize(sum = sum(total)) %>%
+  arrange(desc(sum)) %>%
+  slice(1:5) 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+top_courses <- enrollment_stats %>%
+  clean_names("snake") %>%
+  right_join(top_departments, by = "course_department") %>%
+  group_by(course_department) %>%
+  filter(total == max(total)) %>%
+  ungroup() %>%
+  select(course_title, course_name, course_department, instructor_full_name, total)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+View(top_courses)
 
-```{r cars}
-summary(cars)
+top_courses %>%
+  gt() %>%
+  cols_label(
+    course_title = "Course Title",
+    course_name = "Course Name",
+    course_department = "Course Department",
+    instructor_full_name = "Instructor",
+    total = "Enrollment"
+  ) %>%
+  tab_header(title = "Most Popular Courses in Large Departments"
+  ) %>%
+  tab_footnote(
+    footnote = "Data from Harvard University",
+    locations = cells_title(groups = "title")
+  ) 
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
