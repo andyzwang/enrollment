@@ -17,10 +17,13 @@ library(gt)
 enrollment_stats <- read_excel("enrollment_data.xlsx", skip = 3)
 top_departments <- enrollment_stats %>%
   clean_names("snake") %>%
+  filter(course_department != "General Education") %>%
   group_by(course_department) %>%
   summarize(sum = sum(total)) %>%
   arrange(desc(sum)) %>%
   slice(1:5) 
+
+enrollment_stats <- read_excel("fall_2018.xlsx", skip = 3)
 
 top_courses <- enrollment_stats %>%
   clean_names("snake") %>%
@@ -29,8 +32,6 @@ top_courses <- enrollment_stats %>%
   filter(total == max(total)) %>%
   ungroup() %>%
   select(course_title, course_name, course_department, instructor_full_name, total)
-
-View(top_courses)
 
 top_courses %>%
   gt() %>%
