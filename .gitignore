@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 enrollment.Rproj
+.DS_Store
+fall_2018.xlsx
