@@ -14,23 +14,29 @@ library(gt)
 ```
 
 ```{r gov_top_5, echo=F}
-enrollment_stats <- read_excel("enrollment_data.xlsx", skip = 3)
+enrollment_stats <- read_excel("enrollment_data.xlsx", skip = 3) %>%
+    clean_names("snake")
 top_departments <- enrollment_stats %>%
-  clean_names("snake") %>%
   filter(course_department != "General Education") %>%
   group_by(course_department) %>%
   summarize(sum = sum(total)) %>%
   arrange(desc(sum)) %>%
   slice(1:5) 
 
-enrollment_stats <- read_excel("fall_2018.xlsx", skip = 3)
+spring_19_data <- read_excel("spring_2019.xlsx", skip = 3) %>%
+  clean_names("snake")
 
-top_courses <- enrollment_stats %>%
-  clean_names("snake") %>%
+new_courses <- enrollment_stats %>%
+  anti_join(spring_19_data, by = "course_name")
+
+View(new_courses)
+
+top_courses <- new_courses %>%
   right_join(top_departments, by = "course_department") %>%
   group_by(course_department) %>%
   filter(total == max(total)) %>%
   ungroup() %>%
+  arrange(desc(total)) %>%
   select(course_title, course_name, course_department, instructor_full_name, total)
 
 top_courses %>%
@@ -42,7 +48,7 @@ top_courses %>%
     instructor_full_name = "Instructor",
     total = "Enrollment"
   ) %>%
-  tab_header(title = "Most Popular Courses in Large Departments"
+  tab_header(title = "Most Popular New Courses in Large Departments"
   ) %>%
   tab_footnote(
     footnote = "Data from Harvard University",
